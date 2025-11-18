@@ -30,98 +30,26 @@
       width: 220px;
       vertical-align: top;
     }
-    .relay-card h2 {
-      margin-bottom: 10px;
-      font-size: 1.3rem;
-    }
-    .relay-card p {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-    .relay-card button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
+    #voiceBtn {
+      background-color: purple;
       color: white;
-      background-color: blue;
-      cursor: pointer;
-      font-size: 16px;
-      width: 90%;
-      transition: opacity 0.3s ease;
-    }
-    .relay-card button:hover {
-      opacity: 0.8;
-    }
-    #allOffBtn, #logoutBtn {
-      max-width: 300px;
-      width: 90%;
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 15px auto;
-      display: block;
-      color: white;
-      transition: opacity 0.3s ease;
-    }
-    #allOffBtn {
-      background-color: #d32f2f;
-    }
-    #logoutBtn {
-      background-color: #555;
-    }
-    #dashboard {
-      display: none;
-    }
-    #loginForm {
-      max-width: 400px;
-      margin: 80px auto 20px;
-      background: white;
-      padding: 30px 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    #loginForm input {
-      width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0 20px;
-      font-size: 1rem;
-      border: 1.5px solid #ccc;
-      border-radius: 10px;
-      box-sizing: border-box;
-      outline-offset: 2px;
-      transition: border-color 0.3s ease;
-    }
-    #loginForm input:focus {
-      border-color: #1e88e5;
-    }
-    #loginForm button {
-      width: 100%;
-      background-color: #1e88e5;
-      color: white;
-      padding: 12px;
+      padding: 15px 30px;
       font-size: 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      width: 90%;
+      max-width: 400px;
+      margin: 15px auto;
     }
-    #loginForm button:hover {
-      background-color: #1565c0;
+    #voiceBtn.listening {
+      background-color: darkred;
     }
-    .relay-container {
-      max-width: 960px;
-      margin: 20px auto 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    footer {
-      font-size: 0.9rem;
-      color: #666;
-      padding: 10px 0;
-      margin-top: 40px;
+    #voiceOutput {
+      font-size: 1rem;
+      color: #444;
+      margin-top: 10px;
+      min-height: 20px;
     }
   </style>
 </head>
@@ -160,7 +88,7 @@
 
     <!-- ⭐ NEW DIMMER SLIDER CARD ⭐ -->
     <div class="relay-card">
-      <h2>Switch 4</h2>
+      <h2>Light Dimmer</h2>
       <p>Brightness: <span id="dimmerValue">0%</span></p>
 
       <input 
@@ -175,13 +103,15 @@
 
   </div>
 
+  <!-- ⭐ NEW VOICE BUTTON ⭐ -->
+  <button id="voiceBtn">🎤 Voice Command</button>
+  <div id="voiceOutput"></div>
+
   <button id="allOffBtn">All OFF</button>
   <button id="logoutBtn">Logout</button>
 </div>
 
-<footer>
-  Created by L.U.W. Liyanage
-</footer>
+<footer>Created by L.U.W. Liyanage</footer>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -189,7 +119,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
     authDomain: "myesphome-851f9.firebaseapp.com",
@@ -215,21 +144,21 @@
 
     if (email === allowedEmail && password === allowedPassword) {
       firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
+        .then(() => {
           loginForm.style.display = "none";
           dashboard.style.display = "block";
           startRelayControl();
         })
         .catch(err => alert("Login failed: " + err.message));
     } else {
-      alert("Invalid email or password.");
+      alert("Invalid credentials!");
     }
   });
 
   function startRelayControl() {
     const db = firebase.database();
 
-    // RELAY 1, 2, 3 — normal toggle buttons
+    // ---------------- Relay 1–3 ----------------
     const relays = [
       { id: 1, path: "relay1" },
       { id: 2, path: "relay2" },
@@ -248,18 +177,15 @@
       });
 
       toggleButton.onclick = () => {
-        relayRef.get().then(snap => {
-          relayRef.set(!snap.val());
-        });
+        relayRef.get().then(snap => relayRef.set(!snap.val()));
       };
     });
 
-    // ⭐ RELAY 4 — DIMMER SLIDER ⭐
+    // ---------------- DIMMER (Relay 4) ----------------
     const dimmerSlider = document.getElementById("dimmerSlider");
     const dimmerValue  = document.getElementById("dimmerValue");
     const dimmerRef    = db.ref("/relay4");
 
-    // Update UI when Firebase value changes
     dimmerRef.on("value", snap => {
       let v = snap.val();
       if (v == null) return;
@@ -267,33 +193,102 @@
       dimmerValue.innerText = v + "%";
     });
 
-    // When slider moved → update Firebase
     dimmerSlider.addEventListener("input", () => {
       let v = parseInt(dimmerSlider.value);
       dimmerValue.innerText = v + "%";
       dimmerRef.set(v);
     });
 
-    // ALL OFF button
+    // ---------------- ALL OFF ----------------
     document.getElementById("allOffBtn").onclick = () => {
       db.ref("/relay1").set(false);
       db.ref("/relay2").set(false);
       db.ref("/relay3").set(false);
       db.ref("/relay4").set(0);
     };
+
+    // ---------------- VOICE CONTROL ----------------
+    const voiceBtn = document.getElementById("voiceBtn");
+    const voiceOutput = document.getElementById("voiceOutput");
+    let recognition;
+
+    if ("webkitSpeechRecognition" in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = "en-US";
+
+      recognition.onresult = (event) => {
+        let command = event.results[0][0].transcript.toLowerCase();
+        voiceOutput.innerText = "You said: " + command;
+        parseVoiceCommand(command, db);
+        voiceBtn.classList.remove("listening");
+      };
+
+      recognition.onend = () => {
+        voiceBtn.classList.remove("listening");
+      };
+    }
+
+    voiceBtn.onclick = () => {
+      if (!recognition) {
+        alert("Voice recognition not supported in this browser!");
+        return;
+      }
+
+      voiceOutput.innerText = "Listening...";
+      voiceBtn.classList.add("listening");
+      recognition.start();
+    };
+  }
+
+  // ---------------- COMMAND PARSER ----------------
+  function parseVoiceCommand(cmd, db) {
+    cmd = cmd.toLowerCase();
+
+    // Switch ON/OFF commands
+    if (cmd.includes("switch one on")) db.ref("/relay1").set(true);
+    else if (cmd.includes("switch one off")) db.ref("/relay1").set(false);
+
+    else if (cmd.includes("switch two on")) db.ref("/relay2").set(true);
+    else if (cmd.includes("switch two off")) db.ref("/relay2").set(false);
+
+    else if (cmd.includes("switch three on")) db.ref("/relay3").set(true);
+    else if (cmd.includes("switch three off")) db.ref("/relay3").set(false);
+
+    // Dimmer commands
+    else if (cmd.includes("dimmer 0") || cmd.includes("0 percent")) db.ref("/relay4").set(0);
+    else if (cmd.includes("25")) db.ref("/relay4").set(25);
+    else if (cmd.includes("50")) db.ref("/relay4").set(50);
+    else if (cmd.includes("75")) db.ref("/relay4").set(75);
+    else if (cmd.includes("100")) db.ref("/relay4").set(100);
+
+    else if (cmd.includes("set dimmer to")) {
+      let num = cmd.match(/\d+/);
+      if (num) {
+        num = parseInt(num[0]);
+        if ([0,25,50,75,100].includes(num)) {
+          db.ref("/relay4").set(num);
+        }
+      }
+    }
+
+    // General ON/OFF statements
+    else if (cmd.includes("all off")) {
+      db.ref("/relay1").set(false);
+      db.ref("/relay2").set(false);
+      db.ref("/relay3").set(false);
+      db.ref("/relay4").set(0);
+    }
   }
 
   document.getElementById("logoutBtn").onclick = () => {
-    firebase.auth().signOut()
-      .then(() => {
-        dashboard.style.display = "none";
-        loginForm.style.display = "block";
-        document.getElementById("email").value = "";
-        document.getElementById("password").value = "";
-      })
-      .catch(err => alert("Logout failed: " + err.message));
+    firebase.auth().signOut().then(() => {
+      dashboard.style.display = "none";
+      loginForm.style.display = "block";
+    });
   };
 </script>
 
 </body>
 </html>
+
