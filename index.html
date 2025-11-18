@@ -1,322 +1,611 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Umesh Wisvantha</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>MyHome Dashboard — Voice Enabled</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="ESP32 Firebase Home Dashboard with voice control (English + Sinhala)" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0 10px 40px;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: space-between;
+    :root{
+      --bg:#f4f7fb; --card:#ffffff; --accent:#0e8a74; --accent-2:#1565c0;
+      --muted:#7a8a99; --danger:#d32f2f; --glass: rgba(255,255,255,0.6);
+      --radius:14px;
+      --shadow: 0 8px 24px rgba(15,23,42,0.06);
+      --glass-shadow: 0 6px 18px rgba(15,23,42,0.04);
     }
-    h1 {
-      margin-top: 30px;
-      font-size: 1.8rem;
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,#eef6f9 0%,var(--bg) 100%);
+      color:#122028;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
-    .relay-card {
-      display: inline-block;
-      background-color: white;
-      padding: 20px;
-      margin: 15px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 220px;
-      vertical-align: top;
+
+    /* container */
+    .app{
+      width:100%;
+      max-width:1080px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:22px;
+      display:flex;
+      gap:22px;
+      align-items:flex-start;
     }
-    .relay-card h2 {
-      margin-bottom: 10px;
-      font-size: 1.3rem;
+
+    /* left: controls */
+    .left{
+      width:360px;
+      min-height:420px;
     }
-    .relay-card button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      background-color: blue;
-      cursor: pointer;
-      font-size: 16px;
-      width: 90%;
-      transition: opacity 0.3s ease;
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:10px;
     }
-    #allOffBtn, #logoutBtn, #voiceBtn {
-      max-width: 300px;
-      width: 90%;
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 15px auto;
-      display: block;
-      color: white;
-      transition: opacity 0.3s ease;
+    .logo{
+      width:46px;height:46px;border-radius:10px;background:var(--accent);
+      color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;
+      box-shadow:var(--glass-shadow);
     }
-    #allOffBtn { background-color: #d32f2f; }
-    #logoutBtn { background-color: #555; }
-    #voiceBtn { background-color: #009688; }
-    #dashboard { display: none; }
-    #loginForm {
-      max-width: 400px;
-      margin: 80px auto 20px;
-      background: white;
-      padding: 30px 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    h1{font-size:20px;margin:0 0 6px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    /* login card */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--glass-shadow);
+      margin-bottom:14px;
     }
+
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="email"], input[type="password"]{
+      width:100%;padding:12px 12px;border-radius:10px;border:1px solid #e6eef2;
+      outline:none;font-size:14px;background:#fbfeff;
+      transition:box-shadow .15s, border-color .15s;
+    }
+    input:focus{box-shadow:0 6px 18px rgba(14,138,116,0.06);border-color:var(--accent)}
+    .row{display:flex;gap:10px}
+    .btn{
+      display:inline-block;padding:12px 14px;border-radius:10px;border:none;color:#fff;background:var(--accent);
+      cursor:pointer;font-weight:600;width:100%;font-size:15px;
+    }
+    .btn.secondary{background:var(--accent-2)}
+    .small{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+
+    /* right: dashboard */
+    .right{flex:1;min-height:420px}
+    .controls{
+      display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+    }
+    .relay{
+      width:220px;background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--glass-shadow);
+    }
+    .relay h3{margin:0 0 8px;font-size:15px}
+    .status{font-weight:700;color:var(--muted);margin-bottom:10px}
+    .relay button{width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer}
+    .relay .toggle-off{background:#2f80ed}
+    .dimmer{display:flex;flex-direction:column;gap:8px}
+    input[type="range"]{width:100%}
+
+    .big-actions{display:flex;gap:10px;margin-top:14px}
+    .big-actions .btn{flex:1}
+
+    /* voice area */
+    .voice-area{margin-top:12px;background:linear-gradient(180deg,#fff,#fbfdff); padding:12px;border-radius:12px;box-shadow:var(--glass-shadow)}
+    .voice-btn{
+      width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--accent),#0b6b5a);
+      color:#fff;font-weight:700;font-size:16px;cursor:pointer;
+    }
+    .voice-btn.listening{background:linear-gradient(90deg,#b00020,#7a0820)}
+    .voice-info{margin-top:8px;font-size:13px;color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:980px){ .app{flex-direction:column; padding:16px;} .left{width:100%} .right{width:100%} .controls{justify-content:center} }
   </style>
 </head>
 <body>
+  <div class="app" role="application">
+    <div class="left">
+      <div class="brand">
+        <div class="logo">UW</div>
+        <div>
+          <h1>MyHome Dashboard</h1>
+          <p class="lead">Control relays & dimmer — voice enabled (EN / SI)</p>
+        </div>
+      </div>
 
-<h1>MyHome Dashboard</h1>
+      <!-- Login Card (improved UI) -->
+      <div class="card" aria-labelledby="login-heading">
+        <h2 id="login-heading" style="margin:0 0 8px;font-size:16px">Sign in</h2>
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" />
+        <label for="password" style="margin-top:10px">Password</label>
+        <input id="password" type="password" placeholder="••••••••" />
+        <div style="height:12px"></div>
+        <button id="loginBtn" class="btn">Sign in</button>
+        <div class="small">Use your project credentials to access the dashboard</div>
+      </div>
 
-<!-- Login -->
-<div id="loginForm">
-  <input type="email" id="email" placeholder="Enter Email" required />
-  <input type="password" id="password" placeholder="Enter Password" required />
-  <button id="loginBtn">Login</button>
-</div>
+      <!-- Voice Card -->
+      <div class="card">
+        <h3 style="margin:0 0 8px">Voice Assistant</h3>
+        <div class="voice-area">
+          <button id="voiceBtn" class="voice-btn">🎤 Start Voice Assistant</button>
+          <div id="voiceStatus" class="voice-info">Status: Not listening — Click Start and say <strong>"Hey Smart Home"</strong></div>
+          <div id="voiceTranscript" style="margin-top:8px;font-size:14px;color:#0b5560"></div>
+          <div id="micHint" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+        </div>
+      </div>
 
-<!-- Dashboard -->
-<div id="dashboard">
-
-  <!-- 🔵 NEW VOICE BUTTON -->
-  <button id="voiceBtn">🎤 Voice Assistant</button>
-  <p id="voiceStatus" style="font-size:14px; color:#444; margin-top:-10px;"></p>
-
-  <div class="relay-container">
-
-    <div class="relay-card">
-      <h2>Switch 1</h2>
-      <p>Status: <span id="status1">Loading...</span></p>
-      <button id="btn1">Toggle</button>
     </div>
 
-    <div class="relay-card">
-      <h2>Switch 2</h2>
-      <p>Status: <span id="status2">Loading...</span></p>
-      <button id="btn2">Toggle</button>
-    </div>
+    <div class="right">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-weight:700">Live Controls</div>
+        <div style="font-size:13px;color:var(--muted)">Realtime / Firebase</div>
+      </div>
 
-    <div class="relay-card">
-      <h2>Switch 3</h2>
-      <p>Status: <span id="status3">Loading...</span></p>
-      <button id="btn3">Toggle</button>
-    </div>
+      <div class="controls">
+        <div class="relay">
+          <h3>Switch 1</h3>
+          <div class="status">Status: <span id="status1">—</span></div>
+          <button id="btn1">Toggle</button>
+        </div>
 
-    <div class="relay-card">
-      <h2>Switch 4</h2>
-      <p>Brightness: <span id="dimmerValue">0%</span></p>
-      <input type="range" id="dimmerSlider" min="0" max="100" step="25" style="width:90%; margin-top:20px;" />
-    </div>
+        <div class="relay">
+          <h3>Switch 2</h3>
+          <div class="status">Status: <span id="status2">—</span></div>
+          <button id="btn2">Toggle</button>
+        </div>
 
+        <div class="relay">
+          <h3>Switch 3</h3>
+          <div class="status">Status: <span id="status3">—</span></div>
+          <button id="btn3">Toggle</button>
+        </div>
+
+        <div class="relay">
+          <h3>Light Dimmer</h3>
+          <div class="status">Brightness: <span id="dimmerValue">0%</span></div>
+          <div class="dimmer">
+            <input id="dimmerSlider" type="range" min="0" max="100" step="25" />
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="big-actions" style="margin-top:18px">
+        <button id="allOffBtn" class="btn secondary" style="background:#e53935">All OFF</button>
+        <button id="logoutBtn" class="btn" style="background:#556">Logout</button>
+      </div>
+
+    </div>
   </div>
 
-  <button id="allOffBtn">All OFF</button>
-  <button id="logoutBtn">Logout</button>
-</div>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
-<footer>Created by L.U.W. Liyanage</footer>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-
-<script>
-/* ------------------------------
-   Your existing Firebase + login code
-   (UNCHANGED)
--------------------------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
-  authDomain: "myesphome-851f9.firebaseapp.com",
-  databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "myesphome-851f9",
-  storageBucket: "myesphome-851f9.appspot.com",
-  messagingSenderId: "658789168181",
-  appId: "1:658789168181:web:0794c1585891c117a3ad7c"
-};
-
-firebase.initializeApp(firebaseConfig);
-const allowedEmail = "umeshviswantha@gmail.com";
-const allowedPassword = "@1Liyanage09";
-const loginForm = document.getElementById("loginForm");
-const dashboard = document.getElementById("dashboard");
-
-document.getElementById("loginBtn").onclick = () => {
-  let email = document.getElementById("email").value.trim();
-  let pass  = document.getElementById("password").value;
-  if (email===allowedEmail && pass===allowedPassword){
-    firebase.auth().signInWithEmailAndPassword(email, pass)
-    .then(()=>{ loginForm.style.display="none"; dashboard.style.display="block"; startRelayControl(); })
-    .catch(err=>alert(err.message));
-  } else alert("Invalid Email or Password");
-};
-
-function startRelayControl(){
-  const db = firebase.database();
-
-  // RELAY 1–3
-  [1,2,3].forEach(i=>{
-    let ref = db.ref("/relay"+i);
-    ref.on("value",snap=>{
-      document.getElementById("status"+i).innerText = snap.val()?"ON":"OFF";
-    });
-    document.getElementById("btn"+i).onclick = ()=> ref.set(!document.getElementById("status"+i).innerText.includes("ON"));
-  });
-
-  // DIMMER
-  const slider = document.getElementById("dimmerSlider");
-  const dVal   = document.getElementById("dimmerValue");
-  const dRef   = db.ref("/relay4");
-
-  dRef.on("value", snap => {
-    let v = snap.val(); if(v==null) return;
-    slider.value = v; dVal.innerText = v+"%";
-  });
-
-  slider.oninput = ()=>{ dRef.set(parseInt(slider.value)); };
-
-  document.getElementById("allOffBtn").onclick = ()=>{
-    db.ref("/relay1").set(false);
-    db.ref("/relay2").set(false);
-    db.ref("/relay3").set(false);
-    db.ref("/relay4").set(0);
+  <script>
+  /*******************************
+    Firebase config (unchanged)
+  *******************************/
+  const firebaseConfig = {
+    apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
+    authDomain: "myesphome-851f9.firebaseapp.com",
+    databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "myesphome-851f9",
+    storageBucket: "myesphome-851f9.appspot.com",
+    messagingSenderId: "658789168181",
+    appId: "1:658789168181:web:0794c1585891c117a3ad7c"
   };
-}
+  firebase.initializeApp(firebaseConfig);
 
-document.getElementById("logoutBtn").onclick = ()=>{
-  firebase.auth().signOut().then(()=>{
-    dashboard.style.display="none";
-    loginForm.style.display="block";
+  // credentials (unchanged)
+  const allowedEmail = "umeshviswantha@gmail.com";
+  const allowedPassword = "@1Liyanage09";
+
+  // UI references
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const allOffBtn = document.getElementById("allOffBtn");
+  const dashboard = document.querySelector('.app'); // we won't hide entire app to keep design; instead we'll control interactions
+  const emailInput = document.getElementById("email");
+  const passInput = document.getElementById("password");
+
+  // small helper for speak with language fallback
+  function speakText(text, langHint){
+    try{
+      const msg = new SpeechSynthesisUtterance(text);
+      if(langHint) msg.lang = langHint;
+      else msg.lang = 'en-US';
+      window.speechSynthesis.cancel(); // cancel any previous
+      window.speechSynthesis.speak(msg);
+    }catch(e){ console.warn("TTS not available", e); }
+  }
+
+  // --------------------------
+  // Login logic (improved)
+  // --------------------------
+  loginBtn.addEventListener('click', async () => {
+    const em = emailInput.value.trim();
+    const pw = passInput.value;
+    if (em === allowedEmail && pw === allowedPassword) {
+      try {
+        await firebase.auth().signInWithEmailAndPassword(em, pw);
+        // Visual feedback
+        loginBtn.textContent = "Signed in ✓";
+        loginBtn.disabled = true;
+        // initialize controls
+        initControls();
+        speakText("Welcome. Voice assistant is available. Click voice and say Hey Smart Home.", 'en-US');
+      } catch (err) {
+        alert("Firebase sign-in failed: " + err.message);
+      }
+    } else {
+      alert("Invalid email or password");
+    }
   });
-};
-</script>
 
-<!-- ========================================================= -->
-<!-- 🔵 NEW ADVANCED VOICE CONTROL ENGINE (Sinhala + English) -->
-<!-- ========================================================= -->
-<script>
-const voiceBtn = document.getElementById("voiceBtn");
-const voiceStatus = document.getElementById("voiceStatus");
-const db = firebase.database();
+  logoutBtn.addEventListener('click', async () => {
+    try{
+      await firebase.auth().signOut();
+      loginBtn.textContent = "Sign in";
+      loginBtn.disabled = false;
+      speakText("You have been logged out", 'en-US');
+      location.reload();
+    }catch(e){ console.warn(e); }
+  });
 
-let recognizing = false;
-let wakeMode = true;
-let wakeWord = "hey smart home";   // CUSTOM WAKE WORD
-let lastCommand = "";
+  // --------------------------
+  // Initialize Relay UI & Firebase listeners
+  // --------------------------
+  function initControls(){
+    const db = firebase.database();
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognizer = new SpeechRecognition();
-recognizer.lang = "en-US";  // Sinhala works here also (browser auto-detects)
-recognizer.continuous = true;
-recognizer.interimResults = false;
+    // Relays 1-3
+    [1,2,3].forEach(i=>{
+      const statusEl = document.getElementById('status'+i);
+      const btn = document.getElementById('btn'+i);
+      const ref = db.ref('/relay'+i);
+      // listen
+      ref.on('value', snap => {
+        const v = snap.val();
+        statusEl.innerText = v ? 'ON' : 'OFF';
+        btn.style.background = v ? '#0e8a74' : '#2f80ed';
+      });
+      // toggle
+      btn.addEventListener('click', async () => {
+        const cur = (statusEl.innerText === 'ON');
+        await ref.set(!cur);
+      });
+    });
 
-function speak(text){
-  let msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "en-US";
-  window.speechSynthesis.speak(msg);
-}
+    // Dimmer
+    const dRef = db.ref('/relay4');
+    const slider = document.getElementById('dimmerSlider');
+    const dVal = document.getElementById('dimmerValue');
+    dRef.on('value', snap => {
+      const v = snap.val();
+      if (v === null) return;
+      slider.value = v;
+      dVal.innerText = v + '%';
+    });
+    slider.addEventListener('input', ()=> dRef.set(parseInt(slider.value)));
 
-function parseCommand(cmd){
-  let text = cmd.toLowerCase();
-
-  // --------------------
-  // WAKE WORD
-  // --------------------
-  if (text.includes(wakeWord)){
-    wakeMode = false;
-    speak("Yes, I'm listening");
-    return;
-  }
-
-  if (wakeMode) return;  // Ignore until wake word triggered
-
-  // ------------------------------------------------------
-  // SINHALA COMMANDS
-  // ------------------------------------------------------
-  if (text.includes("light eka on") || text.includes("switch ek on")){
-    db.ref("/relay1").set(true);
-    speak("Switch one turned on");
-  }
-  if (text.includes("light eka off")){
-    db.ref("/relay1").set(false);
-    speak("Switch one off");
-  }
-
-  if (text.includes("dimmer") && text.match(/\d+/)){
-    let level = parseInt(text.match(/\d+/)[0]);
-    if ([0,25,50,75,100].includes(level)){
-      db.ref("/relay4").set(level);
-      speak("Brightness set to " + level + " percent");
-    } else speak("Invalid dimmer level");
-  }
-
-  // ------------------------------------------------------
-  // ENGLISH NATURAL
-  // ------------------------------------------------------
-  if (text.includes("all lights on")){
-    db.ref("/relay1").set(true);
-    db.ref("/relay2").set(true);
-    db.ref("/relay3").set(true);
-    speak("All lights turned on");
-  }
-  if (text.includes("all lights off")){
-    db.ref("/relay1").set(false);
-    db.ref("/relay2").set(false);
-    db.ref("/relay3").set(false);
-    db.ref("/relay4").set(0);
-    speak("Everything switched off");
-  }
-
-  if (text.includes("brighter")){
-    db.ref("/relay4").get().then(s=>{
-      let v = s.val(); v += 25; if(v>100) v=100;
-      db.ref("/relay4").set(v);
-      speak("Increasing brightness to "+v+" percent");
+    // All Off
+    allOffBtn.addEventListener('click', ()=>{
+      db.ref('/relay1').set(false);
+      db.ref('/relay2').set(false);
+      db.ref('/relay3').set(false);
+      db.ref('/relay4').set(0);
+      speakText("All devices turned off", 'en-US');
     });
   }
 
-  if (text.includes("dimmer") || text.includes("reduce light")){
-    db.ref("/relay4").get().then(s=>{
-      let v = s.val(); v -= 25; if(v<0) v=0;
-      db.ref("/relay4").set(v);
-      speak("Brightness reduced to "+v+" percent");
-    });
-  }
+  // --------------------------
+  // Voice Assistant engine
+  // - Uses Web Speech API for recognition
+  // - Uses SpeechSynthesis for feedback
+  // - Requires HTTPS (or localhost) for mic access
+  // - Wake word: "hey smart home"
+  // - Supports Sinhala phrases (phonetic matches) + English natural phrases
+  // --------------------------
 
-  wakeMode = true;  // Reset wake mode
-}
+  const voiceBtn = document.getElementById('voiceBtn');
+  const voiceStatus = document.getElementById('voiceStatus');
+  const voiceTranscript = document.getElementById('voiceTranscript');
+  const micHint = document.getElementById('micHint');
+  const dbRoot = firebase.database();
 
-recognizer.onresult = (event)=>{
-  let transcript = event.results[event.results.length-1][0].transcript.trim();
-  voiceStatus.innerText = "Heard: " + transcript;
-  parseCommand(transcript);
-};
-
-recognizer.onend = ()=>{ if(recognizing) recognizer.start(); };
-
-voiceBtn.onclick = ()=>{
-  if(!recognizing){
-    recognizer.start();
-    recognizing = true;
-    voiceBtn.innerText = "🎤 Listening (Say: Hey Smart Home)";
-    voiceStatus.innerText = "Waiting for wake word...";
+  // feature detection
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  if (!SpeechRecognition) {
+    voiceStatus.innerText = "Voice not supported in this browser. Use Chrome (desktop/mobile) with HTTPS.";
+    micHint.innerText = "If on file:// or http://, microphone will be blocked. Use https or localhost.";
+    voiceBtn.disabled = true;
   } else {
-    recognizer.stop();
-    recognizing = false;
-    voiceBtn.innerText = "🎤 Voice Assistant";
-    voiceStatus.innerText = "";
+    recognizer = new SpeechRecognition();
+    recognizer.continuous = true;
+    recognizer.interimResults = false;
+    recognizer.lang = 'en-US'; // we'll accept Sinhala tokens via transcript
   }
-};
-</script>
 
+  // mic permission helper
+  async function ensureMicPermission(){
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      micHint.innerText = "Microphone not available in this browser.";
+      return false;
+    }
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      micHint.innerText = "";
+      return true;
+    } catch (e){
+      micHint.innerText = "Microphone permission denied or blocked. Open site in HTTPS and grant mic permission.";
+      return false;
+    }
+  }
+
+  // simple phonetic check helper for Sinhala keywords (common variants)
+  function siContains(text, keyword){
+    text = text.toLowerCase();
+    keyword = keyword.toLowerCase();
+    const variants = {
+      "light eka on": ["light eka on","light eka on karanna","light eka on karan","light eka on karan na","light eka on karanna"],
+      "light eka off": ["light eka off","light eka off karanna","light eka off karan"],
+      "dimmer": ["dimmer","dime r","dimer","dimmer karanna","dimmer 50 karanna","dimmer 25 karanna","dimmer 75 karanna","dimmer 100 karanna"],
+      "on karanna": ["on karanna","on karan","on karanna"],
+      "off karanna": ["off karanna","off karan"]
+    };
+    const arr = variants[keyword] || [keyword];
+    return arr.some(v => text.includes(v));
+  }
+
+  // parse commands (English natural + Sinhala)
+  let wakeWord = "hey smart home";
+  let waitingForCommand = false;
+  let commandTimeout = null;
+
+  async function handleCommand(transcript){
+    const text = transcript.toLowerCase().trim();
+    voiceTranscript.innerText = text;
+
+    // If wake word heard -> allow next command for 8 seconds
+    if (text.includes(wakeWord)){
+      waitingForCommand = true;
+      speakText("Yes, I am listening", 'en-US');
+      voiceStatus.innerText = "Wake word detected — listening for command...";
+      // cancel previous timeout
+      if (commandTimeout) clearTimeout(commandTimeout);
+      commandTimeout = setTimeout(()=>{ waitingForCommand = false; voiceStatus.innerText = "Wake word timed out"; }, 8000);
+      return;
+    }
+
+    // Only respond if wake word previously activated (for privacy)
+    if (!waitingForCommand){
+      voiceStatus.innerText = 'Waiting for wake word: "Hey Smart Home"';
+      return;
+    }
+
+    // reset waiting state once we process
+    waitingForCommand = false;
+    if (commandTimeout) clearTimeout(commandTimeout);
+
+    // --- Sinhala checks (phonetic)
+    if (siContains(text, "light eka on") || text.includes("switch one on") || text.includes("switch 1 on") || text.includes("light 1 on")){
+      dbRoot.ref('/relay1').set(true);
+      speakText("Switch one turned on", 'en-US');
+      return;
+    }
+    if (siContains(text, "light eka off") || text.includes("switch one off") || text.includes("switch 1 off") ){
+      dbRoot.ref('/relay1').set(false);
+      speakText("Switch one turned off", 'en-US');
+      return;
+    }
+
+    // switch two/three
+    if (text.includes("switch two on") || text.includes("switch 2 on") || text.includes("light two on")){
+      dbRoot.ref('/relay2').set(true); speakText("Switch two on", 'en-US'); return;
+    }
+    if (text.includes("switch two off") || text.includes("switch 2 off")){
+      dbRoot.ref('/relay2').set(false); speakText("Switch two off", 'en-US'); return;
+    }
+    if (text.includes("switch three on") || text.includes("switch 3 on")){
+      dbRoot.ref('/relay3').set(true); speakText("Switch three on", 'en-US'); return;
+    }
+    if (text.includes("switch three off") || text.includes("switch 3 off")){
+      dbRoot.ref('/relay3').set(false); speakText("Switch three off", 'en-US'); return;
+    }
+
+    // Sinhala general on/off (catch phrases)
+    if (text.includes("on karanna") || text.includes("on karan")) {
+      // if mentions light number, attempt mapping else turn relay1
+      if (text.includes("two") || text.includes("2")) dbRoot.ref('/relay2').set(true);
+      else if (text.includes("three") || text.includes("3")) dbRoot.ref('/relay3').set(true);
+      else dbRoot.ref('/relay1').set(true);
+      speakText("Turned on", 'si-LK'); return;
+    }
+    if (text.includes("off karanna") || text.includes("off karan")) {
+      if (text.includes("two") || text.includes("2")) dbRoot.ref('/relay2').set(false);
+      else if (text.includes("three") || text.includes("3")) dbRoot.ref('/relay3').set(false);
+      else dbRoot.ref('/relay1').set(false);
+      speakText("Turned off", 'si-LK'); return;
+    }
+
+    // Dimmer set by number (English or Sinhala)
+    const numMatch = text.match(/(\b\d{1,3}\b)/);
+    if (text.includes("dimmer") && numMatch){
+      let level = parseInt(numMatch[1]);
+      // normalize common phrases: "percent" may not be present
+      if (level >=0 && level <=100){
+        // snap to nearest 25
+        const choices = [0,25,50,75,100];
+        let snap = choices.reduce((prev,curr)=> Math.abs(curr-level) < Math.abs(prev-level) ? curr : prev, choices[0]);
+        dbRoot.ref('/relay4').set(snap);
+        speakText("Brightness set to " + snap + " percent", 'en-US');
+        return;
+      }
+    }
+
+    // Natural language: brighter / increase / reduce
+    if (text.includes("brighter") || text.includes("increase brightness") || text.includes("make the room brighter") || text.includes("increase light")){
+      const snap = await andChangeDimmerBy(25);
+      speakText("Increasing brightness to " + snap + " percent", 'en-US');
+      return;
+    }
+    if (text.includes("darker") || text.includes("reduce brightness") || text.includes("make it darker") || text.includes("reduce light")){
+      const snap = await andChangeDimmerBy(-25);
+      speakText("Decreasing brightness to " + snap + " percent", 'en-US');
+      return;
+    }
+
+    // All lights on / off
+    if (text.includes("all lights on") || text.includes("turn all lights on") || text.includes("turn all on")){
+      dbRoot.ref('/relay1').set(true);
+      dbRoot.ref('/relay2').set(true);
+      dbRoot.ref('/relay3').set(true);
+      speakText("All lights turned on", 'en-US');
+      return;
+    }
+    if (text.includes("all lights off") || text.includes("turn all lights off") || text.includes("turn everything off")){
+      dbRoot.ref('/relay1').set(false);
+      dbRoot.ref('/relay2').set(false);
+      dbRoot.ref('/relay3').set(false);
+      dbRoot.ref('/relay4').set(0);
+      speakText("Everything switched off", 'en-US');
+      return;
+    }
+
+    // fallback: repeat back (natural language)
+    speakText("Sorry, I didn't understand. Please say commands like: turn switch one on; set dimmer to 50 percent", 'en-US');
+  }
+
+  // helper to change dimmer by delta
+  async function andChangeDimmerBy(delta){
+    const snap = await dbRoot.ref('/relay4').get();
+    let v = snap.val() || 0;
+    v = Math.min(100, Math.max(0, v + delta));
+    // snap to nearest 25
+    const choices = [0,25,50,75,100];
+    let snapVal = choices.reduce((p,c)=> Math.abs(c-v) < Math.abs(p-v) ? c : p, choices[0]);
+    await dbRoot.ref('/relay4').set(snapVal);
+    return snapVal;
+  }
+
+  // recognition handlers + safe start
+  let listening = false;
+  async function safeStartRecognition(){
+    const ok = await ensureMicPermission();
+    if (!ok) {
+      voiceStatus.innerText = "Microphone access required. Open site in HTTPS and allow microphone.";
+      return false;
+    }
+    try {
+      recognizer.start();
+      listening = true;
+      voiceBtn.classList.add('listening');
+      voiceBtn.textContent = '🔴 Listening — Say "Hey Smart Home"';
+      voiceStatus.innerText = 'Listening for wake word...';
+      return true;
+    } catch(e){
+      console.warn("recognizer.start failed:", e);
+      voiceStatus.innerText = 'Could not start recognition: ' + e.message;
+      return false;
+    }
+  }
+
+  function safeStopRecognition(){
+    try{
+      recognizer.stop();
+    }catch(e){}
+    listening = false;
+    voiceBtn.classList.remove('listening');
+    voiceBtn.textContent = '🎤 Start Voice Assistant';
+    voiceStatus.innerText = 'Stopped';
+    voiceTranscript.innerText = '';
+  }
+
+  // wire up recognizer events
+  if (recognizer){
+    recognizer.onresult = (ev) => {
+      try{
+        const last = ev.results[ev.results.length-1];
+        const transcript = last[0].transcript;
+        // show short transcript
+        voiceTranscript.innerText = transcript;
+        // parse
+        handleCommand(transcript);
+      }catch(e){ console.warn(e); }
+    };
+    recognizer.onstart = ()=> { voiceStatus.innerText = 'Recognition started — say "Hey Smart Home"'; };
+    recognizer.onend = ()=> {
+      // auto-restart if user still wants listening
+      if (listening){
+        try{ recognizer.start(); }catch(e){ console.warn("auto restart failed", e); }
+      } else {
+        voiceStatus.innerText = 'Recognition stopped';
+      }
+    };
+    recognizer.onerror = (ev)=> {
+      console.warn('recognizer error', ev);
+      if (ev.error === 'not-allowed' || ev.error === 'permission-denied') {
+        voiceStatus.innerText = 'Microphone permission denied. Grant mic access and reload.';
+        speakText("Microphone permission denied", 'en-US');
+      } else {
+        voiceStatus.innerText = 'Recognition error: ' + ev.error;
+      }
+    };
+  }
+
+  // voice button toggle
+  voiceBtn.addEventListener('click', async ()=>{
+    if (!recognizer) {
+      alert('Voice recognition is not supported in this browser.');
+      return;
+    }
+    if (!listening) {
+      const started = await safeStartRecognition();
+      if (!started) return;
+      // show hint about HTTPS
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        micHint.innerText = 'Microphone works best on HTTPS. If this page is using http, the browser may block the mic.';
+      }
+    } else {
+      safeStopRecognition();
+    }
+  });
+
+  // show mic availability status at load
+  (async function showMicSupport(){
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      micHint.innerText = "Microphone API not available in this browser.";
+    } else {
+      // check permission state (optional)
+      try{
+        const perm = await navigator.permissions.query({name:'microphone'});
+        if (perm.state === 'denied') micHint.innerText = "Microphone permission denied. Please allow microphone.";
+        else micHint.innerText = "";
+      }catch(e){}
+    }
+  })();
+
+  // friendly note to user
+  console.log("Voice assistant script loaded. Use Start Voice Assistant then say: Hey Smart Home, turn all lights on / dimmer 50 karanna / make the room brighter.");
+
+  </script>
 </body>
 </html>
