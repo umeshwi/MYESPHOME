@@ -16,10 +16,8 @@
       min-height: 100vh;
       justify-content: space-between;
     }
-    h1 {
-      margin-top: 30px;
-      font-size: 1.8rem;
-    }
+    h1 { margin-top: 30px; font-size: 1.8rem; }
+
     .relay-card {
       display: inline-block;
       background-color: white;
@@ -30,50 +28,7 @@
       width: 220px;
       vertical-align: top;
     }
-    .relay-card h2 {
-      margin-bottom: 10px;
-      font-size: 1.3rem;
-    }
-    .relay-card p {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-    .relay-card button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      background-color: blue;
-      cursor: pointer;
-      font-size: 16px;
-      width: 90%;
-      transition: opacity 0.3s ease;
-    }
-    .relay-card button:hover {
-      opacity: 0.8;
-    }
-    #allOffBtn, #logoutBtn {
-      max-width: 300px;
-      width: 90%;
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 15px auto;
-      display: block;
-      color: white;
-      transition: opacity 0.3s ease;
-    }
-    #allOffBtn {
-      background-color: #d32f2f;
-    }
-    #logoutBtn {
-      background-color: #555;
-    }
-    #dashboard {
-      display: none;
-    }
+
     #loginForm {
       max-width: 400px;
       margin: 80px auto 20px;
@@ -86,67 +41,33 @@
       width: 100%;
       padding: 12px 15px;
       margin: 10px 0 20px;
-      font-size: 1rem;
       border: 1.5px solid #ccc;
       border-radius: 10px;
-      box-sizing: border-box;
-      outline-offset: 2px;
-      transition: border-color 0.3s ease;
-    }
-    #loginForm input:focus {
-      border-color: #1e88e5;
-    }
-    #loginForm button {
-      width: 100%;
-      background-color: #1e88e5;
-      color: white;
-      padding: 12px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #loginForm button:hover {
-      background-color: #1565c0;
-    }
-    .relay-container {
-      max-width: 960px;
-      margin: 20px auto 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    footer {
-      font-size: 0.9rem;
-      color: #666;
-      padding: 10px 0;
-      margin-top: 40px;
     }
 
-    /* 🎤 Floating Mic Button */
+    /* 🎤 FINAL FIXED MIC BUTTON */
     #micBtn {
       position: fixed;
       bottom: 25px;
       right: 25px;
-      background: red;
-      width: 65px;
-      height: 65px;
+      width: 70px;
+      height: 70px;
+      background: #ff4444;
       border-radius: 50%;
       display: none;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       transition: 0.3s;
     }
     #micBtn.active {
-      background: green;
+      background: #22bb33;
       transform: scale(1.1);
     }
     #micBtn img {
-      width: 35px;
-      height: 35px;
+      width: 38px;
+      height: 38px;
     }
   </style>
 </head>
@@ -154,15 +75,13 @@
 
 <h1>MyHome Dashboard</h1>
 
-<!-- Login form -->
 <div id="loginForm">
   <input type="email" id="email" placeholder="Enter Email" required />
   <input type="password" id="password" placeholder="Enter Password" required />
   <button id="loginBtn">Login</button>
 </div>
 
-<!-- Dashboard -->
-<div id="dashboard">
+<div id="dashboard" style="display:none">
   <div class="relay-container">
 
     <div class="relay-card">
@@ -186,14 +105,7 @@
     <div class="relay-card">
       <h2>Switch 4</h2>
       <p>Brightness: <span id="dimmerValue">0%</span></p>
-      <input 
-        type="range" 
-        id="dimmerSlider" 
-        min="0" 
-        max="100" 
-        step="25"
-        style="width: 90%; margin-top: 20px;"
-      />
+      <input type="range" id="dimmerSlider" min="0" max="100" step="25" style="width: 90%; margin-top: 20px;" />
     </div>
 
   </div>
@@ -202,225 +114,216 @@
   <button id="logoutBtn">Logout</button>
 </div>
 
-<!-- 🎤 Voice Button -->
-<div id="micBtn"><img src="https://cdn-icons-png.flaticon.com/512/724/724692.png"></div>
+<!-- MIC BUTTON -->
+<div id="micBtn">
+  <img src="https://cdn-icons-png.flaticon.com/512/552/552490.png" />
+</div>
 
-<footer>
-  Created by L.U.W. Liyanage
-</footer>
-
-<!-- Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
-    authDomain: "myesphome-851f9.firebaseapp.com",
-    databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "myesphome-851f9",
-    storageBucket: "myesphome-851f9.appspot.com",
-    messagingSenderId: "658789168181",
-    appId: "1:658789168181:web:0794c1585891c117a3ad7c"
-  };
+/* ----------------------------------------------------
+   FIREBASE INIT
+---------------------------------------------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
+  authDomain: "myesphome-851f9.firebaseapp.com",
+  databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "myesphome-851f9",
+  storageBucket: "myesphome-851f9.appspot.com",
+  messagingSenderId: "658789168181",
+  appId: "1:658789168181:web:0794c1585891c117a3ad7c"
+};
 
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
-  const allowedEmail = "umeshviswantha@gmail.com";
-  const allowedPassword = "@1Liyanage09";
+const allowedEmail = "umeshviswantha@gmail.com";
+const allowedPassword = "@1Liyanage09";
 
-  const loginForm = document.getElementById("loginForm");
-  const dashboard = document.getElementById("dashboard");
-  const loginBtn = document.getElementById("loginBtn");
+document.getElementById("loginBtn").onclick = () => {
+  let email = email.value.trim();
+  let password = document.getElementById("password").value;
 
-  loginBtn.addEventListener("click", () => {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+  if (email !== allowedEmail || password !== allowedPassword) {
+    return alert("Invalid email or password.");
+  }
 
-    if (email === allowedEmail && password === allowedPassword) {
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          loginForm.style.display = "none";
-          dashboard.style.display = "block";
-          document.getElementById("micBtn").style.display = "flex"; // Show mic
-          startRelayControl();
-          startVoiceControl();
-        })
-        .catch(err => alert("Login failed: " + err.message));
-    } else {
-      alert("Invalid email or password.");
-    }
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => {
+      loginForm.style.display = "none";
+      dashboard.style.display = "block";
+      document.getElementById("micBtn").style.display = "flex";
+      startRelayControl();
+      startVoiceControl();
+    })
+    .catch(err => alert(err.message));
+};
+
+/* ----------------------------------------------------
+   RELAY CONTROL
+---------------------------------------------------- */
+function startRelayControl() {
+  const db = firebase.database();
+
+  const relays = [
+    { id: 1, path: "relay1" },
+    { id: 2, path: "relay2" },
+    { id: 3, path: "relay3" }
+  ];
+
+  relays.forEach(r => {
+    const statusText = document.getElementById(`status${r.id}`);
+    const button = document.getElementById(`btn${r.id}`);
+    const ref = db.ref("/" + r.path);
+
+    ref.on("value", s => {
+      let v = s.val();
+      statusText.innerText = v ? "ON" : "OFF";
+      button.style.backgroundColor = v ? "green" : "blue";
+    });
+
+    button.onclick = () => ref.get().then(s => ref.set(!s.val()));
   });
 
-  function startRelayControl() {
+  const dimmerSlider = dimmerSlider;
+  const dimmerVal = dimmerValue;
+  const dimmerRef = db.ref("/relay4");
+
+  dimmerRef.on("value", s => {
+    let v = s.val() || 0;
+    dimmerSlider.value = v;
+    dimmerVal.innerText = v + "%";
+  });
+
+  dimmerSlider.oninput = () => {
+    let v = parseInt(dimmerSlider.value);
+    dimmerVal.innerText = v + "%";
+    dimmerRef.set(v);
+  };
+
+  allOffBtn.onclick = () => {
+    db.ref("/relay1").set(false);
+    db.ref("/relay2").set(false);
+    db.ref("/relay3").set(false);
+    db.ref("/relay4").set(0);
+  };
+}
+
+logoutBtn.onclick = () => {
+  firebase.auth().signOut().then(() => {
+    dashboard.style.display = "none";
+    loginForm.style.display = "block";
+    micBtn.style.display = "none";
+  });
+};
+
+/* ----------------------------------------------------
+   🎤 IMPROVED VOICE CONTROL (SINHALA + ENGLISH HYBRID)
+---------------------------------------------------- */
+function speak(msg) {
+  let u = new SpeechSynthesisUtterance(msg);
+  u.lang = "en-US";
+  speechSynthesis.speak(u);
+}
+
+function normalize(text) {
+  return text.toLowerCase().replace(/[^a-z0-9අ-ෆ ]/gi, "").trim();
+}
+
+function startVoiceControl() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Voice recognition not supported");
+    return;
+  }
+
+  const mic = document.getElementById("micBtn");
+  const recog = new SpeechRecognition();
+  recog.lang = "en-US";
+  recog.continuous = false;
+
+  mic.onclick = () => {
+    recog.start();
+    mic.classList.add("active");
+    speak("Listening");
+  };
+
+  recog.onend = () => mic.classList.remove("active");
+
+  recog.onresult = (e) => {
+    let cmd = normalize(e.results[0][0].transcript);
+    console.log("VOICE:", cmd);
+
     const db = firebase.database();
 
-    const relays = [
-      { id: 1, path: "relay1" },
-      { id: 2, path: "relay2" },
-      { id: 3, path: "relay3" }
-    ];
+    /* -------------------------
+       SWITCH COMMANDS
+    -------------------------- */
+    if (cmd.includes("switch 1 on") || cmd.includes("switch one on") || cmd.includes("light eka on")) {
+      db.ref("/relay1").set(true);
+      return speak("Switch one turned on");
+    }
 
-    relays.forEach(relay => {
-      const statusText = document.getElementById(`status${relay.id}`);
-      const toggleButton = document.getElementById(`btn${relay.id}`);
-      const relayRef = db.ref("/" + relay.path);
+    if (cmd.includes("switch 1 off") || cmd.includes("switch one off") || cmd.includes("light eka off")) {
+      db.ref("/relay1").set(false);
+      return speak("Switch one turned off");
+    }
 
-      relayRef.on("value", snap => {
-        const state = snap.val();
-        statusText.innerText = state ? "ON" : "OFF";
-        toggleButton.style.backgroundColor = state ? "green" : "blue";
-      });
+    if (cmd.includes("switch 2 on") || cmd.includes("switch two on")) {
+      db.ref("/relay2").set(true);
+      return speak("Switch two turned on");
+    }
 
-      toggleButton.onclick = () => {
-        relayRef.get().then(snap => {
-          relayRef.set(!snap.val());
-        });
-      };
-    });
+    if (cmd.includes("switch 2 off") || cmd.includes("switch two off")) {
+      db.ref("/relay2").set(false);
+      return speak("Switch two turned off");
+    }
 
-    const dimmerSlider = document.getElementById("dimmerSlider");
-    const dimmerValue  = document.getElementById("dimmerValue");
-    const dimmerRef    = db.ref("/relay4");
+    if (cmd.includes("switch 3 on") || cmd.includes("switch three on")) {
+      db.ref("/relay3").set(true);
+      return speak("Switch three turned on");
+    }
 
-    dimmerRef.on("value", snap => {
-      let v = snap.val();
-      if (v == null) return;
-      dimmerSlider.value = v;
-      dimmerValue.innerText = v + "%";
-    });
+    if (cmd.includes("switch 3 off") || cmd.includes("switch three off")) {
+      db.ref("/relay3").set(false);
+      return speak("Switch three turned off");
+    }
 
-    dimmerSlider.addEventListener("input", () => {
-      let v = parseInt(dimmerSlider.value);
-      dimmerValue.innerText = v + "%";
-      dimmerRef.set(v);
-    });
+    /* -------------------------
+       DIMMER COMMANDS
+    -------------------------- */
+    if (cmd.includes("bright") || cmd.includes("brighter") || cmd.includes("max")) {
+      db.ref("/relay4").set(100);
+      return speak("Brightness set to 100%");
+    }
 
-    document.getElementById("allOffBtn").onclick = () => {
+    if (cmd.includes("50") || cmd.includes("half") || cmd.includes("dimmer 50")) {
+      db.ref("/relay4").set(50);
+      return speak("Brightness set to 50%");
+    }
+
+    if (cmd.includes("25") || cmd.includes("low")) {
+      db.ref("/relay4").set(25);
+      return speak("Brightness set to 25%");
+    }
+
+    /* -------------------------
+       ALL OFF
+    -------------------------- */
+    if (cmd.includes("all off") || cmd.includes("everything off") || cmd.includes("okkom off")) {
       db.ref("/relay1").set(false);
       db.ref("/relay2").set(false);
       db.ref("/relay3").set(false);
       db.ref("/relay4").set(0);
-    };
-  }
-
-  document.getElementById("logoutBtn").onclick = () => {
-    firebase.auth().signOut()
-      .then(() => {
-        dashboard.style.display = "none";
-        loginForm.style.display = "block";
-        document.getElementById("micBtn").style.display = "none";
-        document.getElementById("email").value = "";
-        document.getElementById("password").value = "";
-      })
-      .catch(err => alert("Logout failed: " + err.message));
-  };
-
-  /* --------------------------------------------------------------
-     🎤 VOICE CONTROL SYSTEM (Sinhala + English)
-     -------------------------------------------------------------- */
-  function speak(text) {
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = "en-US";
-    speechSynthesis.speak(msg);
-  }
-
-  function startVoiceControl() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const micBtn = document.getElementById("micBtn");
-
-    if (!SpeechRecognition) {
-      alert("Your browser does not support voice commands.");
-      return;
+      return speak("Everything turned off");
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-
-    micBtn.onclick = () => {
-      recognition.start();
-      micBtn.classList.add("active");
-      speak("Listening");
-    };
-
-    recognition.onend = () => {
-      micBtn.classList.remove("active");
-    };
-
-    recognition.onresult = (event) => {
-      let command = event.results[0][0].transcript.toLowerCase();
-      console.log("VOICE:", command);
-
-      const db = firebase.database();
-
-      // 🔥 Switch controls
-      if (command.includes("switch one on") || command.includes("light 1 on") || command.includes("switch 1 on") ||
-          command.includes("light eka 1 on") || command.includes("switch eka on")) {
-        db.ref("/relay1").set(true);
-        speak("Switch 1 turned on");
-      }
-
-      else if (command.includes("switch one off") || command.includes("light 1 off") ||
-               command.includes("switch eka off")) {
-        db.ref("/relay1").set(false);
-        speak("Switch 1 turned off");
-      }
-
-      // Switch 2
-      else if (command.includes("switch two on") || command.includes("switch 2 on")) {
-        db.ref("/relay2").set(true);
-        speak("Switch 2 turned on");
-      }
-      else if (command.includes("switch two off") || command.includes("switch 2 off")) {
-        db.ref("/relay2").set(false);
-        speak("Switch 2 turned off");
-      }
-
-      // Switch 3
-      else if (command.includes("switch three on") || command.includes("switch 3 on")) {
-        db.ref("/relay3").set(true);
-        speak("Switch 3 turned on");
-      }
-      else if (command.includes("switch three off") || command.includes("switch 3 off")) {
-        db.ref("/relay3").set(false);
-        speak("Switch 3 turned off");
-      }
-
-      // 🌗 Dimmer commands
-      else if (command.includes("bright") || command.includes("brighter") ||
-               command.includes("light eka on karanna")) {
-        db.ref("/relay4").set(100);
-        speak("Brightness set to 100 percent");
-      }
-
-      else if (command.includes("dim") || command.includes("dimmer 50") ||
-               command.includes("light eka dim karanna")) {
-        db.ref("/relay4").set(50);
-        speak("Brightness set to 50 percent");
-      }
-
-      else if (command.includes("low") || command.includes("25")) {
-        db.ref("/relay4").set(25);
-        speak("Brightness set to 25 percent");
-      }
-
-      // 🔥 All OFF
-      else if (command.includes("all off") || command.includes("everything off") ||
-               command.includes("okkom off karanna")) {
-        db.ref("/relay1").set(false);
-        db.ref("/relay2").set(false);
-        db.ref("/relay3").set(false);
-        db.ref("/relay4").set(0);
-        speak("All devices turned off");
-      }
-
-      else {
-        speak("Sorry, I did not understand the command.");
-      }
-    };
-  }
+    speak("Sorry, I did not understand that command");
+  };
+}
 </script>
 
 </body>
