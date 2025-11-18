@@ -1,189 +1,427 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>MyHome Dashboard — Voice Enabled</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Umesh Wisvantha</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --bg:#f4f7fb; --card:#ffffff; --accent:#0e8a74; --accent-2:#1565c0;
-      --muted:#7a8a99; --danger:#d32f2f; --glass: rgba(255,255,255,0.6);
-      --radius:14px; --shadow:0 8px 24px rgba(15,23,42,0.06);
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0 10px 40px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: space-between;
     }
-    body{
-      margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;
-      display:flex;justify-content:center;padding:20px;
+    h1 {
+      margin-top: 30px;
+      font-size: 1.8rem;
     }
-    .app{
-      max-width:1080px;width:100%;border-radius:16px;padding:22px;
-      background:linear-gradient(180deg,#ffffffd4,#fffffffa);
-      box-shadow:var(--shadow);display:flex;gap:22px;
+    .relay-card {
+      display: inline-block;
+      background-color: white;
+      padding: 20px;
+      margin: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 220px;
+      vertical-align: top;
     }
-    .left{width:340px}
-    .right{flex:1}
-    .card{
-      background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,0.06);
-      margin-bottom:14px;
+    .relay-card h2 {
+      margin-bottom: 10px;
+      font-size: 1.3rem;
     }
-    input{
-      width:100%;padding:12px;border-radius:10px;border:1px solid #dde4ea;margin-bottom:12px;
-      font-size:15px;
+    .relay-card p {
+      margin-bottom: 10px;
+      font-size: 1rem;
     }
-    .btn{
-      width:100%;padding:12px;font-size:16px;font-weight:600;border-radius:10px;border:none;
-      color:#fff;background:var(--accent);cursor:pointer;transition:0.2s;
+    .relay-card button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      background-color: blue;
+      cursor: pointer;
+      font-size: 16px;
+      width: 90%;
+      transition: opacity 0.3s ease;
     }
-    .btn:hover{opacity:0.85}
-    .controls{display:flex;gap:12px;flex-wrap:wrap}
-    .relay{
-      width:220px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.06)
+    .relay-card button:hover {
+      opacity: 0.8;
     }
-    .relay button{width:100%;padding:10px;border-radius:10px;border:none;color:#fff}
-    .status{font-weight:600;color:#666;margin-bottom:8px}
-    #voiceBtn{
-      width:100%;padding:12px;font-size:17px;font-weight:600;border-radius:12px;border:none;
-      background:#0e8a74;color:#fff;cursor:pointer;margin-bottom:10px;
+    #allOffBtn, #logoutBtn {
+      max-width: 300px;
+      width: 90%;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 15px auto;
+      display: block;
+      color: white;
+      transition: opacity 0.3s ease;
     }
-    #voiceBtn.listening{background:#d32f2f}
+    #allOffBtn {
+      background-color: #d32f2f;
+    }
+    #logoutBtn {
+      background-color: #555;
+    }
+    #dashboard {
+      display: none;
+    }
+    #loginForm {
+      max-width: 400px;
+      margin: 80px auto 20px;
+      background: white;
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    #loginForm input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0 20px;
+      font-size: 1rem;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      box-sizing: border-box;
+      outline-offset: 2px;
+      transition: border-color 0.3s ease;
+    }
+    #loginForm input:focus {
+      border-color: #1e88e5;
+    }
+    #loginForm button {
+      width: 100%;
+      background-color: #1e88e5;
+      color: white;
+      padding: 12px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #loginForm button:hover {
+      background-color: #1565c0;
+    }
+    .relay-container {
+      max-width: 960px;
+      margin: 20px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    footer {
+      font-size: 0.9rem;
+      color: #666;
+      padding: 10px 0;
+      margin-top: 40px;
+    }
+
+    /* 🎤 Floating Mic Button */
+    #micBtn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: red;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #micBtn.active {
+      background: green;
+      transform: scale(1.1);
+    }
+    #micBtn img {
+      width: 35px;
+      height: 35px;
+    }
   </style>
 </head>
-
 <body>
-<div class="app">
-  <div class="left">
 
-    <div class="card">
-      <h2>Login</h2>
-      <input id="email" type="email" placeholder="Email">
-      <input id="password" type="password" placeholder="Password">
-      <button id="loginBtn" class="btn">Login</button>
-    </div>
+<h1>MyHome Dashboard</h1>
 
-    <div class="card">
-      <h3>Voice Assistant</h3>
-      <button id="voiceBtn">🎤 Start Voice Assistant</button>
-      <p id="voiceStatus">Not listening</p>
-      <p id="voiceTranscript" style="font-size:14px"></p>
-      <p id="micHint" style="font-size:12px;color:#888"></p>
-    </div>
-
-  </div>
-
-  <div class="right">
-    <h2>Controls</h2>
-    <div class="controls">
-
-      <div class="relay">
-        <h3>Switch 1</h3>
-        <div class="status">Status: <span id="status1">—</span></div>
-        <button id="btn1" style="background:#1565c0">Toggle</button>
-      </div>
-
-      <div class="relay">
-        <h3>Switch 2</h3>
-        <div class="status">Status: <span id="status2">—</span></div>
-        <button id="btn2" style="background:#1565c0">Toggle</button>
-      </div>
-
-      <div class="relay">
-        <h3>Switch 3</h3>
-        <div class="status">Status: <span id="status3">—</span></div>
-        <button id="btn3" style="background:#1565c0">Toggle</button>
-      </div>
-
-      <div class="relay">
-        <h3>Dimmer</h3>
-        <div class="status">Brightness: <span id="dimmerValue">0%</span></div>
-        <input id="dimmerSlider" type="range" min="0" max="100" step="25" style="width:100%">
-      </div>
-
-    </div>
-
-    <br>
-    <button id="allOffBtn" class="btn" style="background:#d32f2f;width:200px">All OFF</button>
-    <button id="logoutBtn" class="btn" style="background:#555;width:200px;margin-top:10px">Logout</button>
-  </div>
+<!-- Login form -->
+<div id="loginForm">
+  <input type="email" id="email" placeholder="Enter Email" required />
+  <input type="password" id="password" placeholder="Enter Password" required />
+  <button id="loginBtn">Login</button>
 </div>
 
-<!-- Firebase -->
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="relay-container">
+
+    <div class="relay-card">
+      <h2>Switch 1</h2>
+      <p>Status: <span id="status1">Loading...</span></p>
+      <button id="btn1">Toggle</button>
+    </div>
+
+    <div class="relay-card">
+      <h2>Switch 2</h2>
+      <p>Status: <span id="status2">Loading...</span></p>
+      <button id="btn2">Toggle</button>
+    </div>
+
+    <div class="relay-card">
+      <h2>Switch 3</h2>
+      <p>Status: <span id="status3">Loading...</span></p>
+      <button id="btn3">Toggle</button>
+    </div>
+
+    <div class="relay-card">
+      <h2>Switch 4</h2>
+      <p>Brightness: <span id="dimmerValue">0%</span></p>
+      <input 
+        type="range" 
+        id="dimmerSlider" 
+        min="0" 
+        max="100" 
+        step="25"
+        style="width: 90%; margin-top: 20px;"
+      />
+    </div>
+
+  </div>
+
+  <button id="allOffBtn">All OFF</button>
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<!-- 🎤 Voice Button -->
+<div id="micBtn"><img src="https://cdn-icons-png.flaticon.com/512/724/724692.png"></div>
+
+<footer>
+  Created by L.U.W. Liyanage
+</footer>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-/* ------------------------------
-   Firebase Config
--------------------------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
-  authDomain: "myesphome-851f9.firebaseapp.com",
-  databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "myesphome-851f9",
-  storageBucket: "myesphome-851f9.appspot.com",
-  messagingSenderId: "658789168181",
-  appId: "1:658789168181:web:0794c1585891c117a3ad7c"
-};
-firebase.initializeApp(firebaseConfig);
-
-/* ------------------------------
-   Login System
--------------------------------- */
-const allowedEmail = "umeshviswantha@gmail.com";
-const allowedPassword = "@1Liyanage09";
-
-let firebaseReady = false;     // FIX 1
-let dbRoot = null;             // FIX 2
-
-document.getElementById("loginBtn").onclick = async () => {
-  let e = email.value.trim();
-  let p = password.value;
-
-  if (e === allowedEmail && p === allowedPassword) {
-    await firebase.auth().signInWithEmailAndPassword(e, p);
-
-    firebaseReady = true;                  // FIX 3
-    dbRoot = firebase.database();          // FIX 4
-
-    initControls();
-
-    speak("Welcome. Voice assistant is now connected.");
-  } else {
-    alert("Wrong login!");
-  }
-};
-
-/* ------------------------------
-   Relay Controls
--------------------------------- */
-function initControls() {
-  const db = firebase.database();
-
-  [1,2,3].forEach(i => {
-    const ref = db.ref("/relay"+i);
-
-    ref.on("value", snap => {
-      document.getElementById("status"+i).innerText = snap.val() ? "ON" : "OFF";
-    });
-
-    document.getElementById("btn"+i).onclick = () => {
-      ref.set( document.getElementById("status"+i).innerText === "OFF" );
-    };
-  });
-
-  // Dimmer
-  const dRef = db.ref("/relay4");
-  dRef.on("value", snap => {
-    let v = snap.val();
-    dimmerSlider.value = v;
-    dimmerValue.innerText = v + "%";
-  });
-
-  dimmerSlider.oninput = () => {
-    dRef.set(parseInt(dimmerSlider.value));
+  const firebaseConfig = {
+    apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
+    authDomain: "myesphome-851f9.firebaseapp.com",
+    databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "myesphome-851f9",
+    storageBucket: "myesphome-851f9.appspot.com",
+    messagingSenderId: "658789168181",
+    appId: "1:658789168181:web:0794c1585891c117a3ad7c"
   };
 
-  allOffBtn.onclick = () => {
-    db.ref("/relay1").set(false);
-    db.ref("/relay2").set(false);
-    db.ref("/relay3").set(false);
-    db
+  firebase.initializeApp(firebaseConfig);
+
+  const allowedEmail = "umeshviswantha@gmail.com";
+  const allowedPassword = "@1Liyanage09";
+
+  const loginForm = document.getElementById("loginForm");
+  const dashboard = document.getElementById("dashboard");
+  const loginBtn = document.getElementById("loginBtn");
+
+  loginBtn.addEventListener("click", () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (email === allowedEmail && password === allowedPassword) {
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          loginForm.style.display = "none";
+          dashboard.style.display = "block";
+          document.getElementById("micBtn").style.display = "flex"; // Show mic
+          startRelayControl();
+          startVoiceControl();
+        })
+        .catch(err => alert("Login failed: " + err.message));
+    } else {
+      alert("Invalid email or password.");
+    }
+  });
+
+  function startRelayControl() {
+    const db = firebase.database();
+
+    const relays = [
+      { id: 1, path: "relay1" },
+      { id: 2, path: "relay2" },
+      { id: 3, path: "relay3" }
+    ];
+
+    relays.forEach(relay => {
+      const statusText = document.getElementById(`status${relay.id}`);
+      const toggleButton = document.getElementById(`btn${relay.id}`);
+      const relayRef = db.ref("/" + relay.path);
+
+      relayRef.on("value", snap => {
+        const state = snap.val();
+        statusText.innerText = state ? "ON" : "OFF";
+        toggleButton.style.backgroundColor = state ? "green" : "blue";
+      });
+
+      toggleButton.onclick = () => {
+        relayRef.get().then(snap => {
+          relayRef.set(!snap.val());
+        });
+      };
+    });
+
+    const dimmerSlider = document.getElementById("dimmerSlider");
+    const dimmerValue  = document.getElementById("dimmerValue");
+    const dimmerRef    = db.ref("/relay4");
+
+    dimmerRef.on("value", snap => {
+      let v = snap.val();
+      if (v == null) return;
+      dimmerSlider.value = v;
+      dimmerValue.innerText = v + "%";
+    });
+
+    dimmerSlider.addEventListener("input", () => {
+      let v = parseInt(dimmerSlider.value);
+      dimmerValue.innerText = v + "%";
+      dimmerRef.set(v);
+    });
+
+    document.getElementById("allOffBtn").onclick = () => {
+      db.ref("/relay1").set(false);
+      db.ref("/relay2").set(false);
+      db.ref("/relay3").set(false);
+      db.ref("/relay4").set(0);
+    };
+  }
+
+  document.getElementById("logoutBtn").onclick = () => {
+    firebase.auth().signOut()
+      .then(() => {
+        dashboard.style.display = "none";
+        loginForm.style.display = "block";
+        document.getElementById("micBtn").style.display = "none";
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
+      })
+      .catch(err => alert("Logout failed: " + err.message));
+  };
+
+  /* --------------------------------------------------------------
+     🎤 VOICE CONTROL SYSTEM (Sinhala + English)
+     -------------------------------------------------------------- */
+  function speak(text) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = "en-US";
+    speechSynthesis.speak(msg);
+  }
+
+  function startVoiceControl() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById("micBtn");
+
+    if (!SpeechRecognition) {
+      alert("Your browser does not support voice commands.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+
+    micBtn.onclick = () => {
+      recognition.start();
+      micBtn.classList.add("active");
+      speak("Listening");
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove("active");
+    };
+
+    recognition.onresult = (event) => {
+      let command = event.results[0][0].transcript.toLowerCase();
+      console.log("VOICE:", command);
+
+      const db = firebase.database();
+
+      // 🔥 Switch controls
+      if (command.includes("switch one on") || command.includes("light 1 on") || command.includes("switch 1 on") ||
+          command.includes("light eka 1 on") || command.includes("switch eka on")) {
+        db.ref("/relay1").set(true);
+        speak("Switch 1 turned on");
+      }
+
+      else if (command.includes("switch one off") || command.includes("light 1 off") ||
+               command.includes("switch eka off")) {
+        db.ref("/relay1").set(false);
+        speak("Switch 1 turned off");
+      }
+
+      // Switch 2
+      else if (command.includes("switch two on") || command.includes("switch 2 on")) {
+        db.ref("/relay2").set(true);
+        speak("Switch 2 turned on");
+      }
+      else if (command.includes("switch two off") || command.includes("switch 2 off")) {
+        db.ref("/relay2").set(false);
+        speak("Switch 2 turned off");
+      }
+
+      // Switch 3
+      else if (command.includes("switch three on") || command.includes("switch 3 on")) {
+        db.ref("/relay3").set(true);
+        speak("Switch 3 turned on");
+      }
+      else if (command.includes("switch three off") || command.includes("switch 3 off")) {
+        db.ref("/relay3").set(false);
+        speak("Switch 3 turned off");
+      }
+
+      // 🌗 Dimmer commands
+      else if (command.includes("bright") || command.includes("brighter") ||
+               command.includes("light eka on karanna")) {
+        db.ref("/relay4").set(100);
+        speak("Brightness set to 100 percent");
+      }
+
+      else if (command.includes("dim") || command.includes("dimmer 50") ||
+               command.includes("light eka dim karanna")) {
+        db.ref("/relay4").set(50);
+        speak("Brightness set to 50 percent");
+      }
+
+      else if (command.includes("low") || command.includes("25")) {
+        db.ref("/relay4").set(25);
+        speak("Brightness set to 25 percent");
+      }
+
+      // 🔥 All OFF
+      else if (command.includes("all off") || command.includes("everything off") ||
+               command.includes("okkom off karanna")) {
+        db.ref("/relay1").set(false);
+        db.ref("/relay2").set(false);
+        db.ref("/relay3").set(false);
+        db.ref("/relay4").set(0);
+        speak("All devices turned off");
+      }
+
+      else {
+        speak("Sorry, I did not understand the command.");
+      }
+    };
+  }
+</script>
+
+</body>
+</html>
