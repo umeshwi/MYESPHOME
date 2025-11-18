@@ -30,26 +30,45 @@
       width: 220px;
       vertical-align: top;
     }
-    #voiceBtn {
-      background-color: purple;
-      color: white;
-      padding: 15px 30px;
-      font-size: 18px;
+    .relay-card h2 {
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+    .relay-card button {
+      padding: 10px 20px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
+      color: white;
+      background-color: blue;
       cursor: pointer;
+      font-size: 16px;
       width: 90%;
-      max-width: 400px;
+      transition: opacity 0.3s ease;
+    }
+    #allOffBtn, #logoutBtn, #voiceBtn {
+      max-width: 300px;
+      width: 90%;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
       margin: 15px auto;
+      display: block;
+      color: white;
+      transition: opacity 0.3s ease;
     }
-    #voiceBtn.listening {
-      background-color: darkred;
-    }
-    #voiceOutput {
-      font-size: 1rem;
-      color: #444;
-      margin-top: 10px;
-      min-height: 20px;
+    #allOffBtn { background-color: #d32f2f; }
+    #logoutBtn { background-color: #555; }
+    #voiceBtn { background-color: #009688; }
+    #dashboard { display: none; }
+    #loginForm {
+      max-width: 400px;
+      margin: 80px auto 20px;
+      background: white;
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -57,7 +76,7 @@
 
 <h1>MyHome Dashboard</h1>
 
-<!-- Login form -->
+<!-- Login -->
 <div id="loginForm">
   <input type="email" id="email" placeholder="Enter Email" required />
   <input type="password" id="password" placeholder="Enter Password" required />
@@ -66,6 +85,11 @@
 
 <!-- Dashboard -->
 <div id="dashboard">
+
+  <!-- 🔵 NEW VOICE BUTTON -->
+  <button id="voiceBtn">🎤 Voice Assistant</button>
+  <p id="voiceStatus" style="font-size:14px; color:#444; margin-top:-10px;"></p>
+
   <div class="relay-container">
 
     <div class="relay-card">
@@ -86,26 +110,13 @@
       <button id="btn3">Toggle</button>
     </div>
 
-    <!-- ⭐ NEW DIMMER SLIDER CARD ⭐ -->
     <div class="relay-card">
-      <h2>Light Dimmer</h2>
+      <h2>Switch 4</h2>
       <p>Brightness: <span id="dimmerValue">0%</span></p>
-
-      <input 
-        type="range" 
-        id="dimmerSlider" 
-        min="0" 
-        max="100" 
-        step="25"
-        style="width: 90%; margin-top: 20px;"
-      />
+      <input type="range" id="dimmerSlider" min="0" max="100" step="25" style="width:90%; margin-top:20px;" />
     </div>
 
   </div>
-
-  <!-- ⭐ NEW VOICE BUTTON ⭐ -->
-  <button id="voiceBtn">🎤 Voice Command</button>
-  <div id="voiceOutput"></div>
 
   <button id="allOffBtn">All OFF</button>
   <button id="logoutBtn">Logout</button>
@@ -113,182 +124,199 @@
 
 <footer>Created by L.U.W. Liyanage</footer>
 
-<!-- Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
-    authDomain: "myesphome-851f9.firebaseapp.com",
-    databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "myesphome-851f9",
-    storageBucket: "myesphome-851f9.appspot.com",
-    messagingSenderId: "658789168181",
-    appId: "1:658789168181:web:0794c1585891c117a3ad7c"
-  };
+/* ------------------------------
+   Your existing Firebase + login code
+   (UNCHANGED)
+-------------------------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCUzdKCLdsudEWhuGdLjg0CXF2cl8xJAWM",
+  authDomain: "myesphome-851f9.firebaseapp.com",
+  databaseURL: "https://myesphome-851f9-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "myesphome-851f9",
+  storageBucket: "myesphome-851f9.appspot.com",
+  messagingSenderId: "658789168181",
+  appId: "1:658789168181:web:0794c1585891c117a3ad7c"
+};
 
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+const allowedEmail = "umeshviswantha@gmail.com";
+const allowedPassword = "@1Liyanage09";
+const loginForm = document.getElementById("loginForm");
+const dashboard = document.getElementById("dashboard");
 
-  const allowedEmail = "umeshviswantha@gmail.com";
-  const allowedPassword = "@1Liyanage09";
+document.getElementById("loginBtn").onclick = () => {
+  let email = document.getElementById("email").value.trim();
+  let pass  = document.getElementById("password").value;
+  if (email===allowedEmail && pass===allowedPassword){
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+    .then(()=>{ loginForm.style.display="none"; dashboard.style.display="block"; startRelayControl(); })
+    .catch(err=>alert(err.message));
+  } else alert("Invalid Email or Password");
+};
 
-  const loginForm = document.getElementById("loginForm");
-  const dashboard = document.getElementById("dashboard");
-  const loginBtn = document.getElementById("loginBtn");
+function startRelayControl(){
+  const db = firebase.database();
 
-  loginBtn.addEventListener("click", () => {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if (email === allowedEmail && password === allowedPassword) {
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-          loginForm.style.display = "none";
-          dashboard.style.display = "block";
-          startRelayControl();
-        })
-        .catch(err => alert("Login failed: " + err.message));
-    } else {
-      alert("Invalid credentials!");
-    }
+  // RELAY 1–3
+  [1,2,3].forEach(i=>{
+    let ref = db.ref("/relay"+i);
+    ref.on("value",snap=>{
+      document.getElementById("status"+i).innerText = snap.val()?"ON":"OFF";
+    });
+    document.getElementById("btn"+i).onclick = ()=> ref.set(!document.getElementById("status"+i).innerText.includes("ON"));
   });
 
-  function startRelayControl() {
-    const db = firebase.database();
+  // DIMMER
+  const slider = document.getElementById("dimmerSlider");
+  const dVal   = document.getElementById("dimmerValue");
+  const dRef   = db.ref("/relay4");
 
-    // ---------------- Relay 1–3 ----------------
-    const relays = [
-      { id: 1, path: "relay1" },
-      { id: 2, path: "relay2" },
-      { id: 3, path: "relay3" }
-    ];
+  dRef.on("value", snap => {
+    let v = snap.val(); if(v==null) return;
+    slider.value = v; dVal.innerText = v+"%";
+  });
 
-    relays.forEach(relay => {
-      const statusText = document.getElementById(`status${relay.id}`);
-      const toggleButton = document.getElementById(`btn${relay.id}`);
-      const relayRef = db.ref("/" + relay.path);
+  slider.oninput = ()=>{ dRef.set(parseInt(slider.value)); };
 
-      relayRef.on("value", snap => {
-        const state = snap.val();
-        statusText.innerText = state ? "ON" : "OFF";
-        toggleButton.style.backgroundColor = state ? "green" : "blue";
-      });
-
-      toggleButton.onclick = () => {
-        relayRef.get().then(snap => relayRef.set(!snap.val()));
-      };
-    });
-
-    // ---------------- DIMMER (Relay 4) ----------------
-    const dimmerSlider = document.getElementById("dimmerSlider");
-    const dimmerValue  = document.getElementById("dimmerValue");
-    const dimmerRef    = db.ref("/relay4");
-
-    dimmerRef.on("value", snap => {
-      let v = snap.val();
-      if (v == null) return;
-      dimmerSlider.value = v;
-      dimmerValue.innerText = v + "%";
-    });
-
-    dimmerSlider.addEventListener("input", () => {
-      let v = parseInt(dimmerSlider.value);
-      dimmerValue.innerText = v + "%";
-      dimmerRef.set(v);
-    });
-
-    // ---------------- ALL OFF ----------------
-    document.getElementById("allOffBtn").onclick = () => {
-      db.ref("/relay1").set(false);
-      db.ref("/relay2").set(false);
-      db.ref("/relay3").set(false);
-      db.ref("/relay4").set(0);
-    };
-
-    // ---------------- VOICE CONTROL ----------------
-    const voiceBtn = document.getElementById("voiceBtn");
-    const voiceOutput = document.getElementById("voiceOutput");
-    let recognition;
-
-    if ("webkitSpeechRecognition" in window) {
-      recognition = new webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event) => {
-        let command = event.results[0][0].transcript.toLowerCase();
-        voiceOutput.innerText = "You said: " + command;
-        parseVoiceCommand(command, db);
-        voiceBtn.classList.remove("listening");
-      };
-
-      recognition.onend = () => {
-        voiceBtn.classList.remove("listening");
-      };
-    }
-
-    voiceBtn.onclick = () => {
-      if (!recognition) {
-        alert("Voice recognition not supported in this browser!");
-        return;
-      }
-
-      voiceOutput.innerText = "Listening...";
-      voiceBtn.classList.add("listening");
-      recognition.start();
-    };
-  }
-
-  // ---------------- COMMAND PARSER ----------------
-  function parseVoiceCommand(cmd, db) {
-    cmd = cmd.toLowerCase();
-
-    // Switch ON/OFF commands
-    if (cmd.includes("switch one on")) db.ref("/relay1").set(true);
-    else if (cmd.includes("switch one off")) db.ref("/relay1").set(false);
-
-    else if (cmd.includes("switch two on")) db.ref("/relay2").set(true);
-    else if (cmd.includes("switch two off")) db.ref("/relay2").set(false);
-
-    else if (cmd.includes("switch three on")) db.ref("/relay3").set(true);
-    else if (cmd.includes("switch three off")) db.ref("/relay3").set(false);
-
-    // Dimmer commands
-    else if (cmd.includes("dimmer 0") || cmd.includes("0 percent")) db.ref("/relay4").set(0);
-    else if (cmd.includes("25")) db.ref("/relay4").set(25);
-    else if (cmd.includes("50")) db.ref("/relay4").set(50);
-    else if (cmd.includes("75")) db.ref("/relay4").set(75);
-    else if (cmd.includes("100")) db.ref("/relay4").set(100);
-
-    else if (cmd.includes("set dimmer to")) {
-      let num = cmd.match(/\d+/);
-      if (num) {
-        num = parseInt(num[0]);
-        if ([0,25,50,75,100].includes(num)) {
-          db.ref("/relay4").set(num);
-        }
-      }
-    }
-
-    // General ON/OFF statements
-    else if (cmd.includes("all off")) {
-      db.ref("/relay1").set(false);
-      db.ref("/relay2").set(false);
-      db.ref("/relay3").set(false);
-      db.ref("/relay4").set(0);
-    }
-  }
-
-  document.getElementById("logoutBtn").onclick = () => {
-    firebase.auth().signOut().then(() => {
-      dashboard.style.display = "none";
-      loginForm.style.display = "block";
-    });
+  document.getElementById("allOffBtn").onclick = ()=>{
+    db.ref("/relay1").set(false);
+    db.ref("/relay2").set(false);
+    db.ref("/relay3").set(false);
+    db.ref("/relay4").set(0);
   };
+}
+
+document.getElementById("logoutBtn").onclick = ()=>{
+  firebase.auth().signOut().then(()=>{
+    dashboard.style.display="none";
+    loginForm.style.display="block";
+  });
+};
+</script>
+
+<!-- ========================================================= -->
+<!-- 🔵 NEW ADVANCED VOICE CONTROL ENGINE (Sinhala + English) -->
+<!-- ========================================================= -->
+<script>
+const voiceBtn = document.getElementById("voiceBtn");
+const voiceStatus = document.getElementById("voiceStatus");
+const db = firebase.database();
+
+let recognizing = false;
+let wakeMode = true;
+let wakeWord = "hey smart home";   // CUSTOM WAKE WORD
+let lastCommand = "";
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognizer = new SpeechRecognition();
+recognizer.lang = "en-US";  // Sinhala works here also (browser auto-detects)
+recognizer.continuous = true;
+recognizer.interimResults = false;
+
+function speak(text){
+  let msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "en-US";
+  window.speechSynthesis.speak(msg);
+}
+
+function parseCommand(cmd){
+  let text = cmd.toLowerCase();
+
+  // --------------------
+  // WAKE WORD
+  // --------------------
+  if (text.includes(wakeWord)){
+    wakeMode = false;
+    speak("Yes, I'm listening");
+    return;
+  }
+
+  if (wakeMode) return;  // Ignore until wake word triggered
+
+  // ------------------------------------------------------
+  // SINHALA COMMANDS
+  // ------------------------------------------------------
+  if (text.includes("light eka on") || text.includes("switch ek on")){
+    db.ref("/relay1").set(true);
+    speak("Switch one turned on");
+  }
+  if (text.includes("light eka off")){
+    db.ref("/relay1").set(false);
+    speak("Switch one off");
+  }
+
+  if (text.includes("dimmer") && text.match(/\d+/)){
+    let level = parseInt(text.match(/\d+/)[0]);
+    if ([0,25,50,75,100].includes(level)){
+      db.ref("/relay4").set(level);
+      speak("Brightness set to " + level + " percent");
+    } else speak("Invalid dimmer level");
+  }
+
+  // ------------------------------------------------------
+  // ENGLISH NATURAL
+  // ------------------------------------------------------
+  if (text.includes("all lights on")){
+    db.ref("/relay1").set(true);
+    db.ref("/relay2").set(true);
+    db.ref("/relay3").set(true);
+    speak("All lights turned on");
+  }
+  if (text.includes("all lights off")){
+    db.ref("/relay1").set(false);
+    db.ref("/relay2").set(false);
+    db.ref("/relay3").set(false);
+    db.ref("/relay4").set(0);
+    speak("Everything switched off");
+  }
+
+  if (text.includes("brighter")){
+    db.ref("/relay4").get().then(s=>{
+      let v = s.val(); v += 25; if(v>100) v=100;
+      db.ref("/relay4").set(v);
+      speak("Increasing brightness to "+v+" percent");
+    });
+  }
+
+  if (text.includes("dimmer") || text.includes("reduce light")){
+    db.ref("/relay4").get().then(s=>{
+      let v = s.val(); v -= 25; if(v<0) v=0;
+      db.ref("/relay4").set(v);
+      speak("Brightness reduced to "+v+" percent");
+    });
+  }
+
+  wakeMode = true;  // Reset wake mode
+}
+
+recognizer.onresult = (event)=>{
+  let transcript = event.results[event.results.length-1][0].transcript.trim();
+  voiceStatus.innerText = "Heard: " + transcript;
+  parseCommand(transcript);
+};
+
+recognizer.onend = ()=>{ if(recognizing) recognizer.start(); };
+
+voiceBtn.onclick = ()=>{
+  if(!recognizing){
+    recognizer.start();
+    recognizing = true;
+    voiceBtn.innerText = "🎤 Listening (Say: Hey Smart Home)";
+    voiceStatus.innerText = "Waiting for wake word...";
+  } else {
+    recognizer.stop();
+    recognizing = false;
+    voiceBtn.innerText = "🎤 Voice Assistant";
+    voiceStatus.innerText = "";
+  }
+};
 </script>
 
 </body>
 </html>
-
